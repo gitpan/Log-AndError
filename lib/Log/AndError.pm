@@ -1,7 +1,7 @@
 package Log::AndError;
 #require 5.6.0;
 require 5.005;
-$Log::AndError::VERSION = 0.99;
+$Log::AndError::VERSION = 1.00;
 use strict;
 #use warnings;
 use Log::AndError::Constants qw(:all);
@@ -81,7 +81,7 @@ my $self = shift;
 
 # NO EXPORTS NEEDED 
 # We're a good little module.
-#@Log::AndError::ISA = qw();
+#@Log::AndError::ISA = qw(Log::AndError::Constants);
 ##############################################################################
 ## constructor
 ##############################################################################
@@ -136,7 +136,7 @@ Gets or sets the currently used service name. The default is in the POD above an
 my $self = shift;
 ####$self->logger(DEBUG3, 'service_name('.join(',',@_).')'); # DO NOT DO THIS!
 my $key = 'LOG_SERVICE_NAME';
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 	if(@_){ 
@@ -176,7 +176,7 @@ Sets or gets the debug level. Should be >= 0. If you decide against that then ma
 my $self = shift;
 ####$self->logger(DEBUG3, 'debug_level('.join(',',@_).')'); # DO NOT DO THIS!
 my $key = 'LOG_DEBUG_LEVEL';
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 	if(@_){ 
@@ -217,7 +217,7 @@ Sets or gets the info debug level. Should be <= -2. If you decide against that t
 my $self = shift;
 ####$self->logger(DEBUG3, 'info_level('.join(',',@_).')'); # DO NOT DO THIS!
 my $key = 'LOG_INFO_LEVEL';
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 	if(@_){ 
@@ -258,7 +258,7 @@ Sets or gets the alwayslog level. Should be <= -2. If you decide against that th
 my $self = shift;
 ####$self->logger(DEBUG3, 'alwayslog_level('.join(',',@_).')'); # DO NOT DO THIS!
 my $key = 'LOG_ALWAYSLOG_LEVEL';
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 	if(@_){ 
@@ -299,7 +299,7 @@ my $self = shift;
 ####$self->logger(DEBUG3, 'template('.join(',',@_).')');# DO NOT DO THIS!
 my($ok, $error) = (1, undef);
 my $key = 'LOG_TEMPLATE';
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 
@@ -346,9 +346,11 @@ This is a wrapper for the C<error_code()> and C<error_msg()> functions. Remember
 =cut
 my $self = shift;
 ####$self->logger(DEBUG3, 'error('.join(',',@_).')');# DO NOT DO THIS!
-my ($code,$msg) = ($_[0], $_[1]);
-	$self->error_code($code) if(@_);
-	$self->error_msg($msg) if(@_);
+ 	if (@_){
+ 		my ($code,$msg) = ($_[0], $_[1]);
+		$self->error_code($code);
+		$self->error_msg($msg);
+	}
 return($self->error_code(),$self->error_msg());
 }
 
@@ -383,7 +385,7 @@ Sets or gets the last error code encountered. Remember that this is most useful 
 my $self = shift;
 ####$self->logger(DEBUG3, 'error_code('.join(',',@_).')'); # DO NOT DO THIS!
 my $key = 'LOG_ERROR_CODE';
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 	if(@_){
@@ -423,7 +425,7 @@ Sets or gets the textual description of last error. Remmber that this is most us
 my $self = shift;
 ####$self->logger(DEBUG3, 'error_msg('.join(',',@_).')'); # DO NOT DO THIS!
 my $key = 'LOG_ERROR_MSG';
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 	if(@_){ 
@@ -453,7 +455,7 @@ Logs messages.
 
 =item Returns:
 
-($err, $msg) -1 is OK. Everything else > 0 is an error. See Message for details
+($err, $msg) undef is OK. Everything else > 0 is an error. See Message for details
 
 =back
 
@@ -461,15 +463,15 @@ Logs messages.
 my $self = shift;
 ####$self->logger(DEBUG3, 'add('.join(',',@_).')'); # DO NOT DO THIS!
 my($level,$msg) = ($_[0], $_[1]);
-my($nok,$error) = (-1, 'ENTRY NOT LOGGED');
+my($nok,$error) = (undef, 'ENTRY NOT LOGGED');
 my $key = 'LOG_LOGGER';
 
-   	if(!$self->{$key}){
+   	if(!exists($self->{$key})){
 		$self->{$key} = $Deflt{$key};
 	}
 	if(( ($level <= $self->debug_level) && ($level >= 0) ) || ($level == $self->info_level) || ($level == $self->alwayslog_level)) { 
 		$self->{$key}->(sprintf($self->template,$self->service_name,$level,$msg));
-		($nok, $error) = (-1, 'ENTRY LOGGED'); 
+		($nok, $error) = (undef, 'ENTRY LOGGED'); 
 	}
 #$self->error($nok,$error); # DO NOT do this as it screws up ISA users
 return($nok,$error);
@@ -492,6 +494,10 @@ return($temp =~ m/.*\%s.*\%d.*\%s.*/gox);
 
 =pod
 
+=head1 HISTORY
+
+=head2 See Changes file in distribution.
+
 =head1 TODO
 
 =over 1
@@ -502,19 +508,8 @@ More Documentation.
 
 =item * 
 
-More samples Log functions. (syslog, SQL, etc...)
-
-=back
-
-=head1 HISTORY
-
-=head2 Ver 0.99 - 01/09/02
-
-=over 1
-
-=item *
-
-Born on Date.
+More samples Log functions. (syslog, SQL, etc...) 
+The SQL example should implement a time sequence for preserving order
 
 =back
 
