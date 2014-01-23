@@ -1,7 +1,7 @@
 package Log::AndError;
 #require 5.6.0;
 require 5.005;
-$Log::AndError::VERSION = 1.00;
+$Log::AndError::VERSION = 1.01;
 use strict;
 #use warnings;
 use Log::AndError::Constants qw(:all);
